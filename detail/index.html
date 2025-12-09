@@ -201,9 +201,20 @@
         renderChips($("chips"), notes.chips);
       };
 
+      const getDataFileName = () => {
+        const params = new URLSearchParams(window.location.search);
+        const raw =
+          params.get("data") || params.get("id") || "detail.json";
+        const trimmed = raw.trim();
+        const withExt = trimmed.endsWith(".json") ? trimmed : `${trimmed}.json`;
+        // guard: only allow simple filenames to avoid path traversal
+        return /^[\w.-]+\.json$/.test(withExt) ? withExt : "detail.json";
+      };
+
       const load = async () => {
+        const dataFile = getDataFileName();
         try {
-          const res = await fetch("detail.json");
+          const res = await fetch(dataFile);
           if (!res.ok) throw new Error(`status: ${res.status}`);
           const data = await res.json();
           renderPage(data);
@@ -211,7 +222,8 @@
           console.error("detail.json の読み込みに失敗しました", err);
           if ($("title"))
             $("title").textContent = "データを読み込めませんでした";
-          if ($("lead")) $("lead").textContent = "detail.json を確認してください。";
+          if ($("lead"))
+            $("lead").textContent = `${dataFile} を確認してください。`;
         }
       };
 

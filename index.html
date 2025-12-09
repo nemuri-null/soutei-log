@@ -15,24 +15,73 @@
     </header>
 
     <main class="page container">
-      <span class="eyebrow">Welcome</span>
-      <h1>装丁ログ サンプルサイト</h1>
+      <span class="eyebrow">Catalog</span>
+      <h1>装丁ログ一覧</h1>
       <p class="lead">
-        GitHub Pages で公開するためのルートページです。装丁詳細のサンプルは「サンプル詳細へ」からご覧ください。
+        GitHub Pages 用のトップページです。登録された JSON をもとに詳細ページへリンクします。
+        パラメータで <code>detail/?id=ファイル名</code> を指定すると各データを読み込みます。
       </p>
 
-      <div class="card">
-        <h2 style="margin: 0 0 8px">ディレクトリ</h2>
-        <p style="margin: 0 0 10px">
-          公開用トップ: <code>/index.html</code><br />
-          詳細ページ: <code>/detail/index.html</code>（JSON で生成）<br />
-          データ: <code>/detail/detail.json</code><br />
-          テンプレ: <code>/detail/detail-template.json</code>
-        </p>
-        <a class="nav-link" href="detail/" style="margin-top: 4px; display: inline-flex"
-          >サンプル詳細を開く</a
-        >
-      </div>
+      <div id="entry-list"></div>
     </main>
+    <script>
+      const listEl = document.getElementById("entry-list");
+
+      const renderEntries = (entries = []) => {
+        listEl.replaceChildren();
+        if (!entries.length) {
+          const empty = document.createElement("p");
+          empty.textContent = "まだエントリがありません。detail/ に JSON を追加してください。";
+          listEl.appendChild(empty);
+          return;
+        }
+
+        entries.forEach((item) => {
+          const card = document.createElement("div");
+          card.className = "card";
+
+          const title = document.createElement("h2");
+          title.style.margin = "0 0 6px";
+          title.textContent = item.title || "無題";
+
+          const meta = document.createElement("p");
+          meta.className = "lead";
+          meta.style.margin = "0 0 10px";
+          meta.textContent = item.lead || "";
+
+          const tags = document.createElement("div");
+          tags.className = "tag-list";
+          (item.tags || []).forEach((tag) => {
+            const t = document.createElement("span");
+            t.className = "tag";
+            t.textContent = tag;
+            tags.appendChild(t);
+          });
+
+          const link = document.createElement("a");
+          link.className = "nav-link";
+          const param = item.data || item.id || "detail";
+          link.href = `detail/?id=${encodeURIComponent(param)}`;
+          link.textContent = "詳細を見る";
+
+          card.append(title, meta, tags, link);
+          listEl.appendChild(card);
+        });
+      };
+
+      const fetchList = async () => {
+        try {
+          const res = await fetch("detail/list.json");
+          if (!res.ok) throw new Error(`status: ${res.status}`);
+          const data = await res.json();
+          renderEntries(Array.isArray(data) ? data : data.items || []);
+        } catch (err) {
+          console.error("一覧の読み込みに失敗しました", err);
+          renderEntries([]);
+        }
+      };
+
+      document.addEventListener("DOMContentLoaded", fetchList);
+    </script>
   </body>
 </html>
