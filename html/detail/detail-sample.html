@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>装丁ログ | 詳細サンプル</title>
+    <link rel="stylesheet" href="../../css/style.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container inner">
+        <div class="brand">装丁ログ</div>
+        <a class="nav-link" href="../index.html">一覧にもどる</a>
+      </div>
+    </header>
+
+    <main class="page container">
+      <span class="eyebrow" id="eyebrow"></span>
+      <h1 id="title"></h1>
+      <p class="lead" id="lead"></p>
+
+      <div class="hero-grid">
+        <div class="card">
+          <div class="cover-label" id="cover-label"></div>
+          <figure class="cover-image" id="cover-image" aria-label="">
+            <span class="placeholder-text" id="cover-placeholder">Loading...</span>
+          </figure>
+          <div class="tag-list" id="tag-list" aria-label="タグ一覧"></div>
+        </div>
+
+        <div class="card">
+          <dl class="meta-block" id="meta-block" aria-label="基本情報"></dl>
+          <p class="summary" id="summary"></p>
+        </div>
+      </div>
+
+      <section class="section">
+        <h2>材料と加工</h2>
+        <div class="material-grid" id="material-grid"></div>
+      </section>
+
+      <section class="section">
+        <h2>ディテール写真</h2>
+        <div class="gallery" id="gallery"></div>
+      </section>
+
+      <section class="section">
+        <h2>覚え書き・感想</h2>
+        <div class="notes">
+          <h3>メモ</h3>
+          <p id="memo"></p>
+          <h3>次に活かすこと</h3>
+          <p id="next"></p>
+          <div class="tag-list" id="chips"></div>
+        </div>
+      </section>
+    </main>
+    <script>
+      const $ = (id) => document.getElementById(id);
+
+      const renderLines = (target, lines = []) => {
+        if (!target) return;
+        target.replaceChildren();
+        lines.forEach((line, index) => {
+          const span = document.createElement("span");
+          span.textContent = `・${line}`;
+          target.appendChild(span);
+          if (index !== lines.length - 1) {
+            target.appendChild(document.createElement("br"));
+          }
+        });
+      };
+
+      const renderTags = (target, tags = []) => {
+        if (!target) return;
+        target.replaceChildren();
+        tags.forEach((tag) => {
+          const el = document.createElement(tag.href ? "a" : "span");
+          el.className = "tag";
+          el.textContent = tag.text;
+          if (tag.href) el.href = tag.href;
+          target.appendChild(el);
+        });
+      };
+
+      const renderMeta = (target, items = []) => {
+        if (!target) return;
+        target.replaceChildren();
+        items.forEach((item) => {
+          const wrapper = document.createElement("div");
+          wrapper.className = "meta-item";
+
+          const dt = document.createElement("dt");
+          dt.textContent = item.title;
+          const dd = document.createElement("dd");
+          dd.textContent = item.value;
+
+          wrapper.appendChild(dt);
+          wrapper.appendChild(dd);
+          target.appendChild(wrapper);
+        });
+      };
+
+      const renderMaterials = (target, items = []) => {
+        if (!target) return;
+        target.replaceChildren();
+        items.forEach((item) => {
+          const box = document.createElement("div");
+          box.className = "material";
+
+          const label = document.createElement("span");
+          label.className = "label";
+          label.textContent = item.label;
+
+          const name = document.createElement("strong");
+          name.textContent = item.name;
+
+          const desc = document.createElement("p");
+          desc.textContent = item.description;
+
+          box.append(label, name, desc);
+          target.appendChild(box);
+        });
+      };
+
+      const renderGallery = (target, items = []) => {
+        if (!target) return;
+        target.replaceChildren();
+        items.forEach((item) => {
+          const figure = document.createElement("figure");
+          const media = document.createElement(item.image ? "img" : "div");
+
+          if (item.image) {
+            media.src = item.image;
+            media.alt = item.caption || "詳細画像";
+          } else {
+            media.className = "frame";
+            media.setAttribute("aria-hidden", "true");
+          }
+
+          const caption = document.createElement("figcaption");
+          caption.textContent = item.caption;
+
+          figure.append(media, caption);
+          target.appendChild(figure);
+        });
+      };
+
+      const renderChips = (target, chips = []) => {
+        if (!target) return;
+        target.replaceChildren();
+        chips.forEach((chip) => {
+          const el = document.createElement("span");
+          el.className = "chip";
+          el.textContent = chip;
+          target.appendChild(el);
+        });
+      };
+
+      const renderCover = (cover = {}) => {
+        const coverLabel = $("cover-label");
+        const coverImage = $("cover-image");
+        const placeholder = $("cover-placeholder");
+        if (coverLabel) coverLabel.textContent = cover.label || "表紙";
+        if (!coverImage) return;
+
+        coverImage.querySelectorAll("img").forEach((img) => img.remove());
+        coverImage.setAttribute(
+          "aria-label",
+          cover.alt || cover.label || "表紙サンプル"
+        );
+
+        if (placeholder) {
+          placeholder.textContent = cover.placeholder || "Cover";
+          placeholder.style.display = cover.image ? "none" : "block";
+        }
+
+        if (cover.image) {
+          const img = document.createElement("img");
+          img.src = cover.image;
+          img.alt = cover.alt || cover.label || "表紙";
+          coverImage.appendChild(img);
+        }
+      };
+
+      const renderPage = (data) => {
+        if ($("eyebrow")) $("eyebrow").textContent = data.eyebrow || "";
+        if ($("title")) $("title").textContent = data.title || "";
+        if ($("lead")) $("lead").textContent = data.lead || "";
+        if ($("summary")) $("summary").textContent = data.summary || "";
+
+        renderCover(data.cover);
+        renderTags($("tag-list"), data.tags);
+        renderMeta($("meta-block"), data.meta);
+        renderMaterials($("material-grid"), data.materials);
+        renderGallery($("gallery"), data.gallery);
+
+        const notes = data.notes || {};
+        renderLines($("memo"), notes.memo);
+        renderLines($("next"), notes.next);
+        renderChips($("chips"), notes.chips);
+      };
+
+      const load = async () => {
+        try {
+          const res = await fetch("detail.json");
+          if (!res.ok) throw new Error(`status: ${res.status}`);
+          const data = await res.json();
+          renderPage(data);
+        } catch (err) {
+          console.error("detail.json の読み込みに失敗しました", err);
+          if ($("title"))
+            $("title").textContent = "データを読み込めませんでした";
+          if ($("lead")) $("lead").textContent = "detail.json を確認してください。";
+        }
+      };
+
+      document.addEventListener("DOMContentLoaded", load);
+    </script>
+  </body>
+</html>
